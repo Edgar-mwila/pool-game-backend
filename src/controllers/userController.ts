@@ -1,9 +1,8 @@
 // src/controllers/userController.ts
-
 import { Request, Response } from 'express';
 import { getAuth } from 'firebase-admin/auth';
-import { firestore } from '../config/firebase';  // Firestore database instance
-import { User } from '../models/user';
+import { firestore } from '../config/firebase';
+import { User, createUser, getUserById, } from '../models/user';
 
 // Register a new user
 export const registerUser = async (req: Request, res: Response) => {
@@ -18,15 +17,17 @@ export const registerUser = async (req: Request, res: Response) => {
     });
 
     // Create a user document in Firestore
-    const user: any = {
+    const user: User = {
       id: userRecord.uid,
-      email: userRecord.email,
+      email: userRecord.email || '',
       username: userRecord.displayName || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      stats: {
+        gamesPlayed: 0,
+        gamesWon: 0
+      }
     };
-    
-    await firestore.collection('users').doc(userRecord.uid).set(user);
+
+    await createUser(user);
 
     res.status(201).json({ message: 'User registered successfully', user });
   } catch (error) {
@@ -35,7 +36,7 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-// Login a user
+// Login a user (client-side authentication)
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -49,6 +50,8 @@ export const loginUser = async (req: Request, res: Response) => {
 
     if (!userDoc.exists) {
       return res.status(404).json({ error: 'User not found' });
+    } else if(userDoc?.data()?.password !== password) {
+      return res.status(201).json({ error: 'Wrong password' });
     }
 
     const user = userDoc.data() as User;
@@ -59,21 +62,17 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
+
 // Get user profile
 export const getUserProfile = async (req: Request, res: Response) => {
   const { uid } = req.params;
 
   try {
-    const userDoc = await firestore.collection('users').doc(uid).get();
-
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user = userDoc.data() as User;
+    const user = await getUserById(uid);
     res.status(200).json({ user });
   } catch (error) {
     console.error('Error fetching user profile:', error);
     res.status(500).json({ error: 'Failed to fetch user profile' });
   }
 };
+

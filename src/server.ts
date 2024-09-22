@@ -1,9 +1,4 @@
-import express from 'express';
-
-const app = express();
-
-// Middleware
-app.use(express.json());
+import app from "./app";
 
 const PORT = process.env.PORT || 5000;
 

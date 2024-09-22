@@ -180,7 +180,7 @@ export const getAvailableGames = async (req: Request, res: Response) => {
     }
 
     // Collect the available games
-    const availableGames: Game[] = gamesQuerySnapshot.docs.map(doc => {
+    const availableGames: Game[] = gamesQuerySnapshot.docs.map((doc: any) => {
       const gameData = doc.data() as Game;
       return {
         ...gameData,

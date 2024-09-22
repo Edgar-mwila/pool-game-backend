@@ -1,7 +1,6 @@
 // src/middleware/auth.ts
 import { Request, Response, NextFunction } from 'express';
 import { firestore } from '../config/firebase';
-import { Timestamp } from 'firebase-admin/firestore';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authToken = req.headers.authorization;
